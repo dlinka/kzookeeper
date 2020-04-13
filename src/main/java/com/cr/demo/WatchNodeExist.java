@@ -1,13 +1,14 @@
 package com.cr.demo;
 
-import org.apache.zookeeper.*;
+import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.Watcher;
+import org.apache.zookeeper.ZooKeeper;
 
-import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 
-public class CreateNode {
+public class WatchNodeExist {
 
-    public static void main(String[] args) throws IOException, KeeperException, InterruptedException {
+    public static void main(String[] args) throws KeeperException, InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
         WatcherHolder.holder.set((event) -> {
             System.out.println(event);
@@ -17,8 +18,7 @@ public class CreateNode {
         });
         ZooKeeper zk = ZK.getInstance();
         latch.await();
-
-        System.out.println(zk.create("/car", "accord".getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT));
+        System.out.println(zk.exists("/car", false));
     }
 
 }

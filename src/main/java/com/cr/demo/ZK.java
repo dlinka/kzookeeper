@@ -1,4 +1,4 @@
-package com.cr;
+package com.cr.demo;
 
 import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooKeeper;
