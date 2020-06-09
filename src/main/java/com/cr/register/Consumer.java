@@ -1,4 +1,4 @@
-package com.cr;
+package com.cr.register;
 
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.Watcher;
@@ -16,57 +16,59 @@ import java.util.concurrent.TimeUnit;
 public class Consumer {
 
     private ZooKeeper zk;
-    private CountDownLatch eventNone = new CountDownLatch(1);
-    private String serversNode;
+    private CountDownLatch latch = new CountDownLatch(1);
+    private String path;
 
     public static void main(String[] args) throws Exception {
         Consumer consumer = new Consumer();
-        consumer.buildZKClient();
-        consumer.eventNone.await();
+
+        //构建消费者客户端
+        consumer.build();
+        consumer.latch.await();
+
         consumer.getProducers();
         TimeUnit.SECONDS.sleep(300);
     }
 
-    private void buildZKClient() throws IOException {
+    public void build() throws IOException {
         try (InputStream is = Producer.class.getResourceAsStream("/zk.properties")) {
             Properties properties = new Properties();
             properties.load(is);
+            path = properties.getProperty("path");
             zk = new ZooKeeper(properties.getProperty("address"),
                     Integer.parseInt(properties.getProperty("sessionTimeout")),
                     (event) -> {
-                        System.out.println(event);
                         if (event.getType() == Watcher.Event.EventType.None) {
                             System.out.println("zk client is build");
-                            eventNone.countDown();
+                            latch.countDown();
                             return;
                         }
                         if (event.getType() == Watcher.Event.EventType.NodeChildrenChanged) {
                             getProducers();
                             return;
                         }
-                        if (event.getPath().indexOf("/servers/server") != -1 && event.getType() == Watcher.Event.EventType.NodeDataChanged) {
+                        if (event.getType() == Watcher.Event.EventType.NodeDataChanged) {
                             getProducers();
                             return;
                         }
                     });
-            serversNode = properties.getProperty("serversNode");
         }
     }
 
-    private void getProducers() {
+    public void getProducers() {
+        Map<String, String> producers = new HashMap<>();
         try {
-            List<String> children = zk.getChildren(serversNode, true);
-            Map<String, String> servers = new HashMap<>();
-            for (String child : children) {
-                byte[] data = zk.getData(serversNode + "/" + child, true, null);
-                servers.put(child, new String(data));
+            List<String> children = zk.getChildren(path, true);
+            for (String producer : children) {
+                byte[] data = zk.getData(path + "/" + producer, true, null);
+                producers.put(producer, new String(data));
             }
-            System.out.println("servers [" + servers + "]");
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         } catch (KeeperException e) {
             e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
+        System.out.println("producers -  [" + producers + "]");
     }
 
 }

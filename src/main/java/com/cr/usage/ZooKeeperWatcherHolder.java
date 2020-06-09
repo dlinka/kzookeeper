@@ -1,7 +1,7 @@
-package com.cr.demo;
+package com.cr.usage;
 
 import org.apache.zookeeper.Watcher;
 
-public class WatcherHolder {
+public class ZooKeeperWatcherHolder {
     public static ThreadLocal<Watcher> holder = new ThreadLocal<>();
 }

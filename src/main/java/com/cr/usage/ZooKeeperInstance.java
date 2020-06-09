@@ -1,22 +1,22 @@
-package com.cr.demo;
+package com.cr.usage;
 
 import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooKeeper;
 
 import java.io.IOException;
 
-public class ZK {
+public class ZooKeeperInstance {
     private volatile static ZooKeeper instance;
 
-    private ZK() {
+    private ZooKeeperInstance() {
     }
 
-    public static ZooKeeper getInstance() {
+    public static ZooKeeper get() {
         if (instance == null) {
-            synchronized (ZK.class) {
+            synchronized (ZooKeeperInstance.class) {
                 if (instance == null) {
                     try {
-                        ThreadLocal<Watcher> holder = WatcherHolder.holder;
+                        ThreadLocal<Watcher> holder = ZooKeeperWatcherHolder.holder;
                         Watcher watcher = holder.get();
                         if (watcher == null) {
                             watcher = (event) -> {};

@@ -1,4 +1,4 @@
-package com.cr;
+package com.cr.register;
 
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.Watcher;
@@ -15,39 +15,40 @@ import java.util.concurrent.TimeUnit;
 public class Producer {
 
     private ZooKeeper zk;
-    private String serversNode;
-    private CountDownLatch eventNone = new CountDownLatch(1);
+    private String path;
+    private CountDownLatch latch = new CountDownLatch(1);
 
     public static void main(String[] args) throws Exception {
         Producer producer = new Producer();
-        producer.buildZKClient(); //生成客户端
-        producer.eventNone.await();
-        producer.createNode(args); //创建节点
+
+        //构建生产者客户端
+        producer.build();
+        producer.latch.await();
+
+        producer.create();
         TimeUnit.SECONDS.sleep(300);
     }
 
-    private void buildZKClient() throws IOException {
+    public void build() throws IOException {
         try (InputStream is = Producer.class.getResourceAsStream("/zk.properties")) {
             Properties properties = new Properties();
             properties.load(is);
+            path = properties.getProperty("path");
             zk = new ZooKeeper(properties.getProperty("address"),
                     Integer.parseInt(properties.getProperty("sessionTimeout")),
                     (event) -> {
                         if (event.getType() == Watcher.Event.EventType.None) {
                             System.out.println("zk client is build");
-                            eventNone.countDown();
+                            latch.countDown();
                         }
                     });
-            serversNode = properties.getProperty("serversNode");
+
         }
     }
 
-
-    private void createNode(String[] args) throws Exception {
-        if (args.length == 0) throw new Exception("参数异常");
+    public void create() throws Exception {
         String uuid = UUID.randomUUID().toString();
-        String path = zk.create(serversNode + "/" + args[0], uuid.getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL_SEQUENTIAL);
-        System.out.println(path + " node is create");
+        zk.create(path + "/cr", uuid.getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL_SEQUENTIAL);
     }
 
 }
