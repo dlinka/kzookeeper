@@ -4,6 +4,9 @@
 
     tar -zxvf zookeeper-3.4.14.tar.gz  -C /usr/local/
     mv zoo_sample.cfg zoo.cfg
+    mkdir data
+    vi zoo.cfg
+    dataDir=/usr/local/zookeeper-3.4.14/data
     
 ## 集群部署
 
